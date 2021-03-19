@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  become: yes
+  roles:
+    - osp-facts
+
+  tasks:
+
+   - name: Generate static inventory file
+     template:
+       src: inventory.j2
+       dest: "/tmp/inventory"
+     delegate_to: localhost
+

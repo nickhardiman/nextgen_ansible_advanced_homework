@@ -1,4 +1,6 @@
-- hosts: workstation
+---
+- hosts: localhost
   become: yes
   roles:
+    - osp-facts
     - osp-instance-delete

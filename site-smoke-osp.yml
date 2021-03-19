@@ -1,11 +1,39 @@
-- hosts: workstation
+- hosts: localhost
   gather_facts: false
-  tasks:
-  - name: OpenStack servers
+  roles:
+  - name: osp-facts
+
+  tasks: 
+
+  - debug:
+      var: hostvars
+
+  - name: Check hosts are reachable over SSH
+    wait_for:
+      host: "{{ item.key }}"
+      port: 22
+      search_regex: OpenSSH
+      timeout: 600
+    loop: "{{ groups['QA'] }}"
+    #loop: "{{ lookup( 'dict', hostvars ) }}"
+    #loop: "{{ groups['appdbs'] + groups['apps'] + groups['frontends'] }}"
+
   - name: Curl website
+    vars: 
+      frontend_host: "{{ groups['frontends'][0] }}"
+      url: "{{ hostvars[frontend_host]['ansible_host'] }}/"
+    shell: "/usr/bin/curl {{ frontend_host }}"
+    #shell: "/usr/bin/curl {{ url }}"
+    register: r_webpage
+
+  - name: debug curl 
+    debug: 
+      var: r_webpage
+      verbosity: 1
 
   - name: Fail if 'Ansible has done its job' is not in the page content
     fail:
-    when: "'Ansible has done its job' not in webpage.results[0].content"
+    when: "'Ansible has done its job' not in r_webpage.stdout"
     tags:
       - osp.smoke
+    
