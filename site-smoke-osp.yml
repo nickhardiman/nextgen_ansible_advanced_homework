@@ -10,7 +10,7 @@
 
   - name: Check hosts are reachable over SSH
     wait_for:
-      host: "{{ item.key }}"
+      host: "{{ item }}"
       port: 22
       search_regex: OpenSSH
       timeout: 600
@@ -33,7 +33,7 @@
 
   - name: Fail if 'Ansible has done its job' is not in the page content
     fail:
-    when: "'Ansible has done its job' not in r_webpage.stdout"
+    when: "'N Tier Flask App' not in r_webpage.stdout"
     tags:
       - osp.smoke
     
