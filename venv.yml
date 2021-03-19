@@ -1,0 +1,33 @@
+---
+  # check the resulting pip package list with 
+  # source /tmp/openstack-venv/bin/activate 
+  # pip list 
+  # or pip freeze
+  
+- hosts: localhost
+  vars: 
+    venv_dir: /tmp/openstack-venv
+  tasks:
+
+  - name: create python3 virtualenv
+    pip: 
+      name: pip
+      virtualenv: "{{ venv_dir }}"
+      virtualenv_command: "/usr/bin/python3 -m venv"
+        
+  - name: upgrade pip in virtualenv
+    pip: 
+      name: pip
+      extra_args: --upgrade
+      virtualenv: "{{ venv_dir }}"
+
+  - name: Install into virtualenv
+    pip:
+      name: 
+      - ansible==2.9.10
+      - openstacksdk==0.12.0
+      - cryptography==2.9.2
+      - python-openstackclient
+      - selinux
+      virtualenv: "{{ venv_dir }}"
+
