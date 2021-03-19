@@ -1,104 +1,103 @@
----
-- name: Deploy, configure, and populate flask repo and virtualenv
-  hosts: apps
-  become: true
-  gather_facts: false
+
+#- name: add repo
+#  copy:
+#    src: files/open_three-tier-app.repo
+#    dest: /etc/yum.repos.d/open_three-tier-app.repo
+
+- name: app_servers  - Create flask user
+  user:
+    name: "{{ flask_user }}"
+    state: present
+
+- name: Install flask packages
+  package:
+    name: "{{ __package }}"
+    state: present
+  loop: "{{ app_yum_packages }}"
+  loop_control:
+    loop_var: __package
+
+- name: "Install flask repo {{ flask_repo }}"
+  git:
+    repo: "{{ flask_repo }}"
+    dest: "{{ flask_home }}/{{ flask_app_name }}"
+    update: yes
+    force: yes
   tags:
-    - application_servers
-    - flask
-  tasks:
+    - git
 
-    - name: add repo
-      copy:
-        src: files/open_three-tier-app.repo
-        dest: /etc/yum.repos.d/open_three-tier-app.repo
+- name: "Change flash repo owner to {{ flask_user }} recursively"
+  file:
+    dest: "{{ flask_home }}/{{ flask_app_name }}"
+    owner: "{{ flask_user }}"
 
-    - name: app_servers  - Create flask user
-      user:
-        name: "{{ flask_user }}"
-        state: present
+- name: Virtualenv setup
+  block:
 
-    - name: Install flask packages
-      package:
-        name: "{{ __package }}"
-        state: present
-      loop: "{{ app_yum_packages }}"
-      loop_control:
-        loop_var: __package
+    - name: Setup pre-requisite pip3 packages
+      pip:
+        name: "{{ pip_dependencies }}"
+        state: latest
+        executable: /usr/bin/pip3
 
-    - name: "Install flask repo {{ flask_repo }}"
-      git:
-        repo: "{{ flask_repo }}"
-        dest: "{{ flask_home }}/{{ flask_app_name }}"
-        update: yes
-        force: yes
-      tags:
-        - git
-
-    - name: "Change flash repo owner to {{ flask_user }} recursively"
-      file:
-        dest: "{{ flask_home }}/{{ flask_app_name }}"
-        owner: "{{ flask_user }}"
-
-    - name: Virtualenv setup
-      block:
-
-        - name: Setup pre-requisite pip3 packages
-          pip:
-            name: "{{ pip_dependencies }}"
-            state: latest
-            executable: /usr/bin/pip3
-
-        - name: "Create virtualenv {{ virtualenv_name }} for Flask"
-          pip:
-            requirements: "{{ flask_home }}/{{ flask_app_name }}/requirements.txt"
-            virtualenv: "{{ virtualenv_home }}/{{ flask_app_name }}"
-            virtualenv_site_packages: no
-            virtualenv_command: /usr/local/bin/virtualenv
-      tags:
-        - venv
-        - virtualenv
+    - name: "Create virtualenv {{ virtualenv_name }} for Flask"
+      pip:
+        requirements: "{{ flask_home }}/{{ flask_app_name }}/requirements.txt"
+        virtualenv: "{{ virtualenv_home }}/{{ flask_app_name }}"
+        virtualenv_site_packages: no
+        virtualenv_command: /usr/local/bin/virtualenv
+  tags:
+    - venv
+    - virtualenv
 
 
-    - name: check hostvars
-      vars:
-        _db: "{{ groups['database_servers'][0] }}"
-      debug:
-        var: hostvars[_db]['groups']
-      run_once: true
+- name: check inventory_hostname
+  vars:
+    _db: "{{ groups['abbdbs'][0] }}"
+  debug:
+    var: hostvars[_db]['inventory_hostname']
+  run_once: true
 
-    - name: fix app.py
-      vars:
-        _db: "{{ groups['database_servers'][0] }}"
-        _db_hostname: "{{ hostvars[_db]['inventory_hostname'] }}"
-      template:
-        src: app.py.j2
-        dest: /opt/resource_hub/app.py
+- name: check ipv4
+  vars:
+    _db: "{{ groups['abbdbs'][0] }}"
+  debug:
+    var: hostvars[_db]['ansible_facts']['default_ipv4']['address']
+  run_once: true
 
-    - name:  This runs next.
-      debug:
-        msg: "{{ virtualenv_home }}/{{ flask_app_name }}/bin/python3 {{ flask_home }}/{{ flask_app_name }}/config.py"
+- name: fix app.py
+  vars:
+    _db: "{{ groups['appdbs'][0] }}"
+    _db_floating_ip: "{{ hostvars[_db]['inventory_hostname'] }}"
+    _db_private_ip: "{{ hostvars[_db]['ansible_facts']['default_ipv4']['address'] }}"
+    _db_hostname: "{{ _db_private_ip }}"
+  template:
+    src: app.py.j2
+    dest: /opt/resource_hub/app.py
 
-    - name: Initialize flask app database resources
-      command: "{{ virtualenv_home }}/{{ flask_app_name }}/bin/python3 {{ flask_home }}/{{ flask_app_name }}/config.py"
-      run_once: true
+- name:  This runs next.
+  debug:
+    msg: "{{ virtualenv_home }}/{{ flask_app_name }}/bin/python3 {{ flask_home }}/{{ flask_app_name }}/config.py"
 
-    - name: "Generate {{ flask_app_name }} startup script"
-      template:
-        src: launch_resource_hub.j2
-        dest: /usr/local/bin/launch_resource_hub
-        mode: '0555'
+- name: Initialize flask app database resources
+  command: "{{ virtualenv_home }}/{{ flask_app_name }}/bin/python3 {{ flask_home }}/{{ flask_app_name }}/config.py"
+  run_once: true
 
-    - name: template systemd service config
-      template:
-        src: flask_service.j2
-        dest: /etc/systemd/system/{{ flask_app_name }}.service
-        mode: '0755'
+- name: "Generate {{ flask_app_name }} startup script"
+  template:
+    src: launch_resource_hub.j2
+    dest: /usr/local/bin/launch_resource_hub
+    mode: '0555'
 
-    - name: start systemd app service
-      systemd:
-        name: "{{ flask_app_name }}.service"
-        state: restarted
-        enabled: yes
+- name: template systemd service config
+  template:
+    src: flask_service.j2
+    dest: /etc/systemd/system/{{ flask_app_name }}.service
+    mode: '0755'
 
+- name: start systemd app service
+  systemd:
+    name: "{{ flask_app_name }}.service"
+    state: restarted
+    enabled: yes
 
