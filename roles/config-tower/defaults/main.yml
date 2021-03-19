@@ -1,2 +1,5 @@
 ---
 # defaults file for roles/config-tower
+tower_username: admin
+tower_password: r3dh4t1!
+
