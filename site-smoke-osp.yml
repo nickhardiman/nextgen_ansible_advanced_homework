@@ -33,7 +33,7 @@
 
   - name: Fail if 'Ansible has done its job' is not in the page content
     fail:
-    when: "'N Tier Flask App' not in r_webpage.stdout"
+    when: "'Ansible' not in r_webpage.stdout"
     tags:
       - osp.smoke
     

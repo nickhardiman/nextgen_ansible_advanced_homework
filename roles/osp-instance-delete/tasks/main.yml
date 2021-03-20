@@ -9,12 +9,16 @@
 
   - name: debug task Fetch Instance Info
     debug:
-      var: r_os_server_info
+      var: item.id
       verbosity: 1
- 
+    loop: "{{ r_os_server_info.openstack_servers }}"
+
+  - pause:  
+
   - name: Delete instances
     os_server:
-       name: "{{ item }}"
+       name: "{{ item.id }}"
+       delete_fip: true
        state: absent
     loop: "{{ r_os_server_info.openstack_servers }}"
    
