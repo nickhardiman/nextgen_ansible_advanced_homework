@@ -8,3 +8,4 @@
     ansible_python_interpreter: /tmp/openstack-venv/bin/python
   roles:
    - osp-servers
+   - osp-facts
