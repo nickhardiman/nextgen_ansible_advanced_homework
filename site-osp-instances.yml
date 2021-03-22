@@ -1,6 +1,7 @@
 - import_playbook: venv.yml
 
-- hosts: localhost
+- name: create OSP instances
+  hosts: localhost
   connection: local
   become: no
   gather_facts: true

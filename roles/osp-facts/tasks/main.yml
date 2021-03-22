@@ -2,29 +2,32 @@
 # tasks file for osp-facts
 #
   - name: add workstation 
+    vars:
+      workstation_IP: hostvars[inventory_hostname]['ansible_default_ipv4']['address']
     add_host:
-       #name: "workstation-{{OSP_GUID}}.rhpds.opentlc.com"
-       name: localhost
-       group: workstation
+      #name: "workstation-{{OSP_GUID}}.rhpds.opentlc.com"
+      name: {{ workstation_IP }}
+      group: workstation
+      ansible_connection: local
 
   - name: Fetch Instance Info
     os_server_info:
-    cloud: openstack
+      cloud: openstack
     register: result
 
   - name: Add openstack hosts and groups
     add_host:
-    name: "{{ item.public_v4 }}"
-    group: "{{ item.metadata.group }}"
-    # ansible_ssh_private_key_file: ~/.ssh/openstack.pem
-    # ansible_ssh_user: cloud-user
+      name: "{{ item.public_v4 }}"
+      group: "{{ item.metadata.group }}"
+      #ansible_ssh_private_key_file: ~/.ssh/openstack.pem
+      #ansible_ssh_user: cloud-user
     with_items: "{{result.openstack_servers}}"
 
   - name: Add openstack hosts and deployment groups
     add_host:
-    name: "{{ item.public_v4 }}"
-    group: "{{ item.metadata.deployment_name }}"
-    #      ansible_ssh_private_key_file: ~/.ssh/openstack.pem
-    #  ansible_ssh_user: cloud-user
+      name: "{{ item.public_v4 }}"
+      group: "{{ item.metadata.deployment_name }}"
+      #ansible_ssh_private_key_file: ~/.ssh/openstack.pem
+      #ansible_ssh_user: cloud-user
     with_items: "{{result.openstack_servers}}"
 
