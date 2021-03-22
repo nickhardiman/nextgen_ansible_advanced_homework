@@ -1,4 +1,15 @@
 
+# create QA inventory 
+
+- name: build OSP inventory
+  become: yes
+  hosts: localhost
+  roles: 
+    - role: osp-facts
+      when: "{{ hostvars[inventory_hostname]['ansible_virtualization_type'] }} == openstack"
+
+
+
 # Setup database tier
 
 - name: setup database tier
