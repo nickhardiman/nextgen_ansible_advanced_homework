@@ -3,7 +3,7 @@
 
 - name: build OSP inventory
   become: yes
-  hosts: localhost
+  hosts: workstation
   roles:
     - role: osp-facts
       #when:  false
