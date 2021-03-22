@@ -13,7 +13,7 @@
       host: "{{ item }}"
       port: 22
       search_regex: OpenSSH
-      timeout: 600
+      timeout: 20
     loop: "{{ groups['QA'] }}"
     #loop: "{{ lookup( 'dict', hostvars ) }}"
     #loop: "{{ groups['appdbs'] + groups['apps'] + groups['frontends'] }}"
