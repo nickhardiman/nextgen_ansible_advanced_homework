@@ -1,4 +1,4 @@
-- hosts: workstation
+- hosts: all
 
   pre_tasks:
     - name: Check if inside AWS.
