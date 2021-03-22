@@ -1,7 +1,7 @@
-{%  for item in groups | sort if item != "jumpbox" %}
+{%  for item in groups | sort  %}
 
 [{{item}}]
-{%   for entry in groups[item] | sort if entry != "workstation" %}
+{%   for entry in groups[item] | sort  %}
 {{ entry }}
 {%   endfor %}
 {% endfor %}

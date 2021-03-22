@@ -3,12 +3,14 @@
 #
   - name: add workstation 
     vars:
-      workstation_IP: hostvars[inventory_hostname]['ansible_default_ipv4']['address']
+      workstation_IP: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      #workstation_fqdn: "{{ hostvars[inventory_hostname]['ansible_fqdn'] }}"
     add_host:
-      #name: "workstation-{{OSP_GUID}}.rhpds.opentlc.com"
-      name: {{ workstation_IP }}
+      name: "{{ workstation_IP }}"
       group: workstation
-      ansible_connection: local
+      #name: "workstation-{{OSP_GUID}}.rhpds.opentlc.com"
+      #ansible_connection: local
+      #ansible_hostname: "{{ workstation_fqdn }}"
 
   - name: Fetch Instance Info
     os_server_info:
@@ -30,4 +32,5 @@
       #ansible_ssh_private_key_file: ~/.ssh/openstack.pem
       #ansible_ssh_user: cloud-user
     with_items: "{{result.openstack_servers}}"
+
 
