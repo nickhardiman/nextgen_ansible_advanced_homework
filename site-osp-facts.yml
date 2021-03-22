@@ -1,10 +1,16 @@
 ---
 - hosts: localhost
   become: yes
+  gather_facts: no
   roles:
     - osp-facts
 
   tasks:
+
+   - debug: 
+       var:  hostvars[item]
+       #var:  hostvars[item]['ansible_facts']['location']
+     loop: "{{ groups['apps']  }}"
 
    - name: Generate static inventory file
      template:
