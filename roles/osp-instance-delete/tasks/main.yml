@@ -13,8 +13,6 @@
       verbosity: 1
     loop: "{{ r_os_server_info.openstack_servers }}"
 
-  - pause:  
-
   - name: Delete instances
     os_server:
        name: "{{ item.id }}"
