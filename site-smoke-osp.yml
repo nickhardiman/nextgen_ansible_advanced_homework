@@ -7,6 +7,7 @@
 
   - debug:
       var: hostvars
+      verbosity: 1
 
   - name: Check hosts are reachable over SSH
     wait_for:
